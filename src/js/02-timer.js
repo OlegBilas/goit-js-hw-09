@@ -22,12 +22,12 @@ const options = {
     return selectedDates[0];
   },
 };
-
+const fpck = flatpickr(dateTimePicker, options);
 const timer = {
   currentTime: Date.now(),
-  selectedTime: flatpickr(dateTimePicker, options).selectedDates[0].getTime(),
+  selectedTime: fpck.selectedDates[0].getTime(),
   isDateCorrect() {
-    if (this.selectedTime - this.currentTime > 0) {
+    if (this.selectedTime > this.currentTime) {
       startBtn.removeAttribute('disabled');
       return this.selectedTime - this.currentTime;
     } else {
