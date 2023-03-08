@@ -22,7 +22,7 @@ const options = {
   },
 };
 const fpck = flatpickr(dateTimePicker, options);
-selectedDate = fpck.onClose(selectedDates);
+selectedDate = fpck.config.onClose();
 // fpck.config.onClose.push(selectedDates => {
 //   selectedDate = selectedDates[0].getTime();
 //   timer.isDateCorrect.call(timer);
