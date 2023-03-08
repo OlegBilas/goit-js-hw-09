@@ -8,10 +8,9 @@ const daysRef = document.querySelector('[data-days]');
 const hoursRef = document.querySelector('[data-hours]');
 const minutesRef = document.querySelector('[data-minutes]');
 const secondsRef = document.querySelector('[data-seconds]');
+let selectedDate;
 
 startBtn.setAttribute('disabled', 'true');
-startBtn.addEventListener('click', onClickStartTimer, { once: true });
-dateTimePicker.addEventListener('input', onInputDateEnter);
 
 const options = {
   enableTime: true,
@@ -19,14 +18,24 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    return selectedDates[0];
+    return selectedDates[0].getTime();
   },
 };
 const fpck = flatpickr(dateTimePicker, options);
+selectedDate = fpck.onClose(selectedDates);
+// fpck.config.onClose.push(selectedDates => {
+//   selectedDate = selectedDates[0].getTime();
+//   timer.isDateCorrect.call(timer);
+// });
+
 const timer = {
   currentTime: Date.now(),
-  selectedTime: fpck.selectedDates[0].getTime(),
+  selectedTime: selectedDate ? selectedDate.getTime() : null,
   isDateCorrect() {
+    if (!this.selectedTime) {
+      //якщо дата ще не вибрана
+      return;
+    }
     if (this.selectedTime > this.currentTime) {
       startBtn.removeAttribute('disabled');
       return this.selectedTime - this.currentTime;
@@ -41,6 +50,8 @@ const timer = {
   },
 };
 
+startBtn.addEventListener('click', onClickStartTimer, { once: true });
+
 function onClickStartTimer() {
   startBtn.setAttribute('disabled', 'true');
   const dateDifference = timer.startTimeOut.call(timer);
@@ -52,10 +63,6 @@ function onClickStartTimer() {
     minutesRef.textContent = minutes.toString.padstart(2, '0');
     secondsRef.textContent = seconds.toString.padstart(2, '0');
   }, 1000);
-}
-
-function onInputDateEnter() {
-  timer.isDateCorrect.call(timer);
 }
 
 function convertMs(ms) {
