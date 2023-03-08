@@ -2,13 +2,16 @@ import flatpickr from 'flatpickr';
 // Додатковий імпорт стилів
 import 'flatpickr/dist/flatpickr.min.css';
 
+import Notiflix from 'notiflix';
+import 'notiflix/dist/notiflix-report-aio-3.2.6.min.js';
+
 const startBtn = document.querySelector('[data-start]');
 const dateTimePicker = document.querySelector('input#datetime-picker');
 const daysRef = document.querySelector('[data-days]');
 const hoursRef = document.querySelector('[data-hours]');
 const minutesRef = document.querySelector('[data-minutes]');
 const secondsRef = document.querySelector('[data-seconds]');
-let selectedDate;
+let selectedDateTime;
 
 startBtn.setAttribute('disabled', 'true');
 
@@ -18,59 +21,55 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    return selectedDates[0].getTime();
+    console.log(selectedDates[0]);
   },
 };
 const fpck = flatpickr(dateTimePicker, options);
-
 fpck.config.onClose.push(selectedDates => {
-  selectedDate = selectedDates[0];
-  return timer.isDateCorrect.call(timer);
+  selectedDateTime = selectedDates[0].getTime();
+  timer.isDateCorrect.call(timer);
 });
 
 const timer = {
   currentTime: Date.now(),
 
-  selectedTime: selectedDate ? selectedDate.getTime() : null,
   isDateCorrect() {
-    selectedDate = fpck.config.onClose();
-    if (!this.selectedTime) {
-      //якщо дата ще не вибрана
-      return;
-    }
-    if (this.selectedTime > this.currentTime) {
+    if (selectedDateTime > this.currentTime) {
       startBtn.removeAttribute('disabled');
-      return this.selectedTime - this.currentTime;
     } else {
-      return alert('Please choose a date in the future');
+      startBtn.setAttribute('disabled', 'true');
+      //alert('Please choose a date in the future');
+      Notiflix.Report.warning(
+        'Warning!',
+        'Please choose a date in the future',
+        'Ok'
+      );
     }
   },
   startTimeOut() {
-    if (this.isDateCorrect()) {
-      return this.selectedTime - this.currentTime;
-    }
+    return selectedDateTime - Date.now();
   },
 };
 
 startBtn.addEventListener('click', onClickStartTimer, { once: true });
-// dateTimePicker.addEventListener('change', onChange);
 
 function onClickStartTimer() {
   startBtn.setAttribute('disabled', 'true');
-  const dateDifference = timer.startTimeOut.call(timer);
 
-  setInterval(() => {
-    const { days, hours, minutes, seconds } = convertMs(dateDifference);
-    daysRef.textContent = days;
-    hoursRef.textContent = hours.toString.padstart(2, '0');
-    minutesRef.textContent = minutes.toString.padstart(2, '0');
-    secondsRef.textContent = seconds.toString.padstart(2, '0');
+  const intervalId = setInterval(() => {
+    const dateDifference = timer.startTimeOut.call(timer);
+    if (dateDifference >= 0) {
+      const { days, hours, minutes, seconds } = convertMs(dateDifference);
+      daysRef.textContent = addLeadingZero(days);
+      hoursRef.textContent = addLeadingZero(hours);
+      minutesRef.textContent = addLeadingZero(minutes);
+      secondsRef.textContent = addLeadingZero(seconds);
+    } else {
+      clearInterval(intervalId);
+      secondsRef.textContent = '00';
+    }
   }, 1000);
 }
-
-// function onChange() {
-//   timer.isDateCorrect.call(timer);
-// }
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
@@ -89,4 +88,12 @@ function convertMs(ms) {
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
+}
+
+function addLeadingZero(value) {
+  if (value < 100) {
+    return value.toString().padStart(2, '0');
+  } else {
+    return value;
+  }
 }
