@@ -22,7 +22,7 @@ const options = {
   },
 };
 const fpck = flatpickr(dateTimePicker, options);
-selectedDate = fpck.config.onClose();
+
 // fpck.config.onClose.push(selectedDates => {
 //   selectedDate = selectedDates[0].getTime();
 //   timer.isDateCorrect.call(timer);
@@ -30,8 +30,10 @@ selectedDate = fpck.config.onClose();
 
 const timer = {
   currentTime: Date.now(),
+
   selectedTime: selectedDate ? selectedDate.getTime() : null,
   isDateCorrect() {
+    selectedDate = fpck.config.onClose();
     if (!this.selectedTime) {
       //якщо дата ще не вибрана
       return;
@@ -51,6 +53,7 @@ const timer = {
 };
 
 startBtn.addEventListener('click', onClickStartTimer, { once: true });
+dateTimePicker.addEventListener('change', onChange);
 
 function onClickStartTimer() {
   startBtn.setAttribute('disabled', 'true');
@@ -63,6 +66,10 @@ function onClickStartTimer() {
     minutesRef.textContent = minutes.toString.padstart(2, '0');
     secondsRef.textContent = seconds.toString.padstart(2, '0');
   }, 1000);
+}
+
+function onChange() {
+  timer.isDateCorrect.call(timer);
 }
 
 function convertMs(ms) {
