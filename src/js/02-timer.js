@@ -23,10 +23,10 @@ const options = {
 };
 const fpck = flatpickr(dateTimePicker, options);
 
-// fpck.config.onClose.push(selectedDates => {
-//   selectedDate = selectedDates[0].getTime();
-//   timer.isDateCorrect.call(timer);
-// });
+fpck.config.onClose.push(selectedDates => {
+  selectedDate = selectedDates[0];
+  return timer.isDateCorrect.call(timer);
+});
 
 const timer = {
   currentTime: Date.now(),
@@ -53,7 +53,7 @@ const timer = {
 };
 
 startBtn.addEventListener('click', onClickStartTimer, { once: true });
-dateTimePicker.addEventListener('change', onChange);
+// dateTimePicker.addEventListener('change', onChange);
 
 function onClickStartTimer() {
   startBtn.setAttribute('disabled', 'true');
@@ -68,9 +68,9 @@ function onClickStartTimer() {
   }, 1000);
 }
 
-function onChange() {
-  timer.isDateCorrect.call(timer);
-}
+// function onChange() {
+//   timer.isDateCorrect.call(timer);
+// }
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
