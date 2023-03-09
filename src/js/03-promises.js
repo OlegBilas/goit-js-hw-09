@@ -2,31 +2,35 @@ import Notiflix from 'notiflix';
 import 'notiflix/dist/notiflix-3.2.6.min.css';
 
 const formRef = document.querySelector('.form');
-const {
-  elements: { delay: delayRef, step: stepRef, amount: amountRef },
-} = formRef;
 
 formRef.addEventListener('submit', onSubmitForm);
 
 function createPromise(position, delay) {
   const shouldResolve = Math.random() > 0.3;
-  return new PromiseRejectionEvent((resolve, reject) => {
-    if (shouldResolve) {
-      // Fulfill
-      resolve({ position, delay });
-    } else {
-      // Reject
-      reject({ position, delay });
-    }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (shouldResolve) {
+        // Fulfill
+        resolve({ position, delay });
+      } else {
+        // Reject
+        reject({ position, delay });
+      }
+    }, delay);
   });
 }
 
 function onSubmitForm(e) {
-  e.prevantDefault();
+  e.preventDefault();
+
+  const {
+    elements: { delay: delayRef, step: stepRef, amount: amountRef },
+  } = formRef;
+
   let position = 1;
   let delay = Number(delayRef.value);
   const amount = Number(amountRef.value);
-  while (position < amount) {
+  while (position <= amount) {
     createPromise(position, delay)
       .then(({ position, delay }) => {
         Notiflix.Notify.success(
@@ -39,8 +43,8 @@ function onSubmitForm(e) {
         );
       });
     delay += Number(stepRef.value);
-    counter += 1;
+    position += 1;
   }
 
-  e.currentTarget.reset();
+  // e.currentTarget.reset();
 }
