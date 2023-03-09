@@ -11,34 +11,18 @@ const daysRef = document.querySelector('[data-days]');
 const hoursRef = document.querySelector('[data-hours]');
 const minutesRef = document.querySelector('[data-minutes]');
 const secondsRef = document.querySelector('[data-seconds]');
-let selectedDateTime;
 
-startBtn.setAttribute('disabled', 'true');
-
-const options = {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-    console.log(selectedDates[0]);
-  },
-};
-const fpck = flatpickr(dateTimePicker, options);
-fpck.config.onClose.push(selectedDates => {
-  selectedDateTime = selectedDates[0].getTime();
-  timer.isDateCorrect.call(timer);
-});
+setElementAttribute(startBtn, 'disabled', true);
 
 const timer = {
-  currentTime: Date.now(),
+  startDateTime: Date.now(),
 
   isDateCorrect() {
-    if (selectedDateTime > this.currentTime) {
-      startBtn.removeAttribute('disabled');
+    if (this.selectedDateTime > this.startDateTime) {
+      setElementAttribute(startBtn, 'disabled', false);
     } else {
-      startBtn.setAttribute('disabled', 'true');
-      //alert('Please choose a date in the future');
+      setElementAttribute(startBtn, 'disabled', true);
+      //alert('Please choose a date in the future'); -> instead of
       Notiflix.Report.warning(
         'Warning!',
         'Please choose a date in the future',
@@ -46,30 +30,52 @@ const timer = {
       );
     }
   },
-  startTimeOut() {
-    return selectedDateTime - Date.now();
+  onClickStartTimer() {
+    setElementAttribute(startBtn, 'disabled', true);
+
+    const intervalId = setInterval(() => {
+      const dateDifference = this.selectedDateTime - Date.now();
+      if (dateDifference >= 0) {
+        const { days, hours, minutes, seconds } = convertMs(dateDifference);
+        daysRef.textContent = this.addLeadingZero(days);
+        hoursRef.textContent = this.addLeadingZero(hours);
+        minutesRef.textContent = this.addLeadingZero(minutes);
+        secondsRef.textContent = this.addLeadingZero(seconds);
+      } else {
+        clearInterval(intervalId);
+        secondsRef.textContent = '00';
+      }
+    }, 1000);
+  },
+  addLeadingZero(value) {
+    if (value < 100) {
+      return value.toString().padStart(2, '0');
+    } else {
+      return value;
+    }
   },
 };
 
-startBtn.addEventListener('click', onClickStartTimer, { once: true });
+//Initialization of flatpickr's instance
+const options = {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    timer.selectedDateTime = selectedDates[0].getTime();
+    timer.isDateCorrect.call(timer);
+  },
+};
+const fpck = flatpickr(dateTimePicker, options);
+// npm startfpck.config.onClose.push(selectedDates => {
+//   selectedDateTime = selectedDates[0].getTime();
+//   timer.isDateCorrect.call(timer);
+// }); --> the same doing, see above method options.onClose(selectedDates)
 
-function onClickStartTimer() {
-  startBtn.setAttribute('disabled', 'true');
-
-  const intervalId = setInterval(() => {
-    const dateDifference = timer.startTimeOut.call(timer);
-    if (dateDifference >= 0) {
-      const { days, hours, minutes, seconds } = convertMs(dateDifference);
-      daysRef.textContent = addLeadingZero(days);
-      hoursRef.textContent = addLeadingZero(hours);
-      minutesRef.textContent = addLeadingZero(minutes);
-      secondsRef.textContent = addLeadingZero(seconds);
-    } else {
-      clearInterval(intervalId);
-      secondsRef.textContent = '00';
-    }
-  }, 1000);
-}
+startBtn.addEventListener('click', timer.onClickStartTimer.bind(timer), {
+  once: true,
+});
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
@@ -90,10 +96,10 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
 }
 
-function addLeadingZero(value) {
-  if (value < 100) {
-    return value.toString().padStart(2, '0');
+function setElementAttribute(elementRef, attributeName, valueOfAttribute) {
+  if (valueOfAttribute) {
+    elementRef.setAttribute(attributeName, `${valueOfAttribute}`);
   } else {
-    return value;
+    elementRef.removeAttribute(attributeName);
   }
 }
